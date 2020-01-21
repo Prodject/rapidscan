@@ -8,8 +8,8 @@
 # Author	 : Shankar Damodaran
 # Tool 		 : RapidScan
 # Usage		 : ./rapidscan.py example.com (or) python rapidsan.py example.com
-# Description: This scanner automates the process of security scanning by using a 
-#              multitude of available linux security tools and some custom scripts. 
+# Description: This scanner automates the process of security scanning by using a
+#              multitude of available linux security tools and some custom scripts.
 #
 
 # Importing the libraries
@@ -29,7 +29,7 @@ from urlparse import urlsplit
 
 # Scan Time Elapser
 intervals = (
-    ('h', 3600),    
+    ('h', 3600),
     ('m', 60),
     ('s', 1),
     )
@@ -53,6 +53,16 @@ def url_maker(url):
 		host = host[4:]
 	return host
 
+def check_internet():
+    os.system('ping -c1 github.com > rs_net 2>&1')
+    if "0% packet loss" in open('rs_net').read():
+        val = 1
+    else:
+        val = 0
+    os.system('rm rs_net > /dev/null 2>&1')
+    return val
+
+
 # Initializing the color module class
 class bcolors:
     HEADER = '\033[95m'
@@ -63,7 +73,7 @@ class bcolors:
     ENDC = '\033[0m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
-    
+
     BG_ERR_TXT 	= '\033[41m' # For critical errors and crashes
     BG_HEAD_TXT = '\033[100m'
     BG_ENDL_TXT = '\033[46m'
@@ -89,7 +99,7 @@ def vul_info(val):
 		result = bcolors.BG_INFO_TXT+" info "+bcolors.ENDC
 	return result
 
-# Legends  
+# Legends
 proc_high = bcolors.BADFAIL + "●" + bcolors.ENDC
 proc_med  = bcolors.WARNING + "●" + bcolors.ENDC
 proc_low  = bcolors.OKGREEN + "●" + bcolors.ENDC
@@ -127,14 +137,14 @@ def helper():
         print "\t"+vul_info('m')+"  : Attacker may correlate multiple vulnerabilities of this type to launch a sophisticated attack."
         print "\t"+vul_info('l')+"     : Not a serious issue, but it is recommended to attend the finding."
         print "\t"+vul_info('i')+"    : Not classified as a vulnerability, simply an useful informational alert to be considered.\n"
-        
+
 
 # Clears Line
 def clear():
         sys.stdout.write("\033[F")
-        sys.stdout.write("\033[K") 
+        sys.stdout.write("\033[K")
 
-# RapidScan Logo 
+# RapidScan Logo
 def logo():
 	print bcolors.WARNING
         print("""\
@@ -142,7 +152,7 @@ def logo():
                                  /__)_  """+bcolors.BADFAIL+" ●"+bcolors.WARNING+"""_/(  _ _
                                 / ( (//)/(/__)( (//)
                                      /
-                     """+bcolors.ENDC+"""(The Multi-Tool Web Vulnerability Scanner)                
+                     """+bcolors.ENDC+"""(The Multi-Tool Web Vulnerability Scanner)
                             """)
         print bcolors.ENDC
 
@@ -153,7 +163,7 @@ class Spinner:
 
     @staticmethod
     def spinning_cursor():
-        while 1: 
+        while 1:
             for cursor in '|/\\': yield cursor #←↑↓→
             #for cursor in '←↑↓→': yield cursor
     def __init__(self, delay=None):
@@ -186,7 +196,7 @@ class Spinner:
             #clear()
             print "\n\t"+ bcolors.BG_ERR_TXT+"RapidScan received a series of Ctrl+C hits. Quitting..." +bcolors.ENDC
             sys.exit(1)
-# End ofloader/spinner class        
+# End ofloader/spinner class
 
 # Instantiating the spinner/loader class
 spinner = Spinner()
@@ -203,7 +213,7 @@ tool_names = [
                 ["uniscan","Uniscan - Checks for robots.txt & sitemap.xml","uniscan",1],
                 ["wafw00f","Wafw00f - Checks for Application Firewalls.","wafw00f",1],
                 ["nmap","Nmap - Fast Scan [Only Few Port Checks]","nmap",1],
-                ["theharvester","The Harvester - Scans for emails using Google's passive search.","theharvester",1],
+                ["theHarvester","The Harvester - Scans for emails using Google's passive search.","theHarvester",1],
                 ["dnsrecon","DNSRecon - Attempts Multiple Zone Transfers on Nameservers.","dnsrecon",1],
                 ["fierce","Fierce - Attempts Zone Transfer [No Brute Forcing]","fierce",1],
                 ["dnswalk","DNSWalk - Attempts Zone Transfer.","dnswalk",1],
@@ -288,7 +298,7 @@ tool_cmd   = [
                 ["uniscan -e -u ",""],
                 ["wafw00f ",""],
                 ["nmap -F --open -Pn ",""],
-                ["theharvester -l 50 -b google -d ",""],
+                ["theHarvester -l 50 -b google -d ",""],
                 ["dnsrecon -d ",""],
                 ["fierce -wordlist xxx -dns ",""],
                 ["dnswalk -d ","."],
@@ -321,9 +331,9 @@ tool_cmd   = [
                 ["fierce -dns ",""],
                 ["dmitry -e ",""],
                 ["dmitry -s ",""],
-                ["nmap -p23 --open ",""],
-                ["nmap -p21 --open ",""],
-                ["nmap --script stuxnet-detect -p 445 ",""],
+                ["nmap -p23 --open -Pn ",""],
+                ["nmap -p21 --open -Pn ",""],
+                ["nmap --script stuxnet-detect -p445 -Pn ",""],
                 ["davtest -url http://",""],
                 ["golismero -e fingerprint_web scan ",""],
                 ["uniscan -w -u ",""],
@@ -447,7 +457,7 @@ tool_resp   = [
                 ["X-XSS Protection is not Present","m",12]
 
 
-                
+
             ]
 
 # Tool Responses (Ends)
@@ -639,7 +649,7 @@ tools_fix = [
 							"Timely security patches for the backend has to be installed. Default credentials has to be changed. If possible, the banner information can be changed to mislead the attacker. The following resource gives more information on how to secure your backend. http://kb.bodhost.com/secure-database-server/"],
 					[48, "Attackers may launch remote exploits to either crash the service or tools like ncrack to try brute-forcing the password on the target.",
 							"It is recommended to block the service to outside world and made the service accessible only through the a set of allowed IPs only really neccessary. The following resource provides insights on the risks and as well as the steps to block the service. https://www.perspectiverisk.com/remote-desktop-service-vulnerabilities/"],
-					[49, "Hackers will be able to read community strings through the service and enumerate quite an information from the target. Also, there are multiple Remote Code Execution and Denial of Service vulnerabilities related to SNMP services.",
+					[49, "Hackers will be able to read community strings through the service and enumerate quite a bit of information from the target. Also, there are multiple Remote Code Execution and Denial of Service vulnerabilities related to SNMP services.",
 							"Use a firewall to block the ports from the outside world. The following article gives wide insight on locking down SNMP service. https://www.techrepublic.com/article/lock-it-down-dont-allow-snmp-to-compromise-network-security/"],
 					[50, "Attackers will be able to find the logs and error information generated by the application. They will also be able to see the status codes that was generated on the application. By combining all these information, the attacker will be able to leverage an attack.",
 							"By restricting access to the logger application from the outside world will be more than enough to mitigate this weakness."],
@@ -652,7 +662,7 @@ tools_fix = [
 
 # Tool Set
 tools_precheck = [
-					["wapiti"], ["whatweb"], ["nmap"], ["golismero"], ["host"], ["wget"], ["uniscan"], ["wafw00f"], ["dirb"], ["davtest"], ["theharvester"], ["xsser"], ["dnsrecon"],["fierce"], ["dnswalk"], ["whois"], ["sslyze"], ["lbd"], ["golismero"], ["dnsenum"],["dmitry"], ["davtest"], ["nikto"], ["dnsmap"]
+					["wapiti"], ["whatweb"], ["nmap"], ["golismero"], ["host"], ["wget"], ["uniscan"], ["wafw00f"], ["dirb"], ["davtest"], ["theHarvester"], ["xsser"], ["dnsrecon"],["fierce"], ["dnswalk"], ["whois"], ["sslyze"], ["lbd"], ["golismero"], ["dnsenum"],["dmitry"], ["davtest"], ["nikto"], ["dnsmap"]
 			     ]
 
 # Shuffling Scan Order (starts)
@@ -662,11 +672,11 @@ tool_names, tool_cmd, tool_resp, tool_status = zip(*scan_shuffle)
 tool_checks = (len(tool_names) + len(tool_resp) + len(tool_status)) / 3 # Cross verification incase, breaks.
 # Shuffling Scan Order (ends)
 
-# Tool Head Pointer: (can be increased but certain tools will be skipped) 
+# Tool Head Pointer: (can be increased but certain tools will be skipped)
 tool = 0
 
 # Run Test
-runTest = 1 
+runTest = 1
 
 # For accessing list/dictionary elements
 arg1 = 0
@@ -696,12 +706,18 @@ if len(sys.argv) == 1 :
     helper()
 else:
     target = sys.argv[1].lower()
-    
-    
+
+
     if target == '--update' or target == '-u' or target == '--u':
     	logo()
         print "RapidScan is updating....Please wait.\n"
         spinner.start()
+        # Checking internet connectivity first...
+        rs_internet_availability = check_internet()
+        if rs_internet_availability == 0:
+            print "\t"+ bcolors.BG_ERR_TXT + "There seems to be some problem connecting to the internet. Please try again or later." +bcolors.ENDC
+            spinner.stop()
+            sys.exit(1)
         cmd = 'sha1sum rapidscan.py | grep .... | cut -c 1-40'
         oldversion_hash = subprocess.check_output(cmd, shell=True)
         oldversion_hash = oldversion_hash.strip()
@@ -716,13 +732,13 @@ else:
             print "\t"+ bcolors.OKGREEN +"RapidScan successfully updated to the latest version." +bcolors.ENDC
         spinner.stop()
         sys.exit(1)
-        
+
     elif target == '--help' or target == '-h' or target == '--h':
     	logo()
         helper()
         sys.exit(1)
     else:
-    
+
         target = url_maker(target)
         os.system('rm te* > /dev/null 2>&1') # Clearing previous scan files
         os.system('clear')
@@ -750,7 +766,7 @@ else:
 			else:
 				print "\t"+bcolors.OKBLUE+tools_precheck[rs_avail_tools][arg1]+bcolors.ENDC+bcolors.OKGREEN+"...available."+bcolors.ENDC
 			rs_avail_tools = rs_avail_tools + 1
-			clear()		
+			clear()
         unavail_tools_names = list(set(unavail_tools_names))
         if unavail_tools == 0:
         	print "\t"+bcolors.OKGREEN+"All Scanning Tools are available. All vulnerability checks will be performed by RapidScan."+bcolors.ENDC
@@ -771,14 +787,14 @@ else:
             scan_start = time.time()
             temp_file = "temp_"+tool_names[tool][arg1]
             cmd = tool_cmd[tool][arg1]+target+tool_cmd[tool][arg2]+" > "+temp_file+" 2>&1"
-           
+
             try:
                 subprocess.check_output(cmd, shell=True)
             except KeyboardInterrupt:
                 runTest = 0
             except:
                 runTest = 1
-                
+
             if runTest == 1:
                     spinner.stop()
                     scan_stop = time.time()
@@ -808,10 +824,10 @@ else:
                     print bcolors.OKBLUE+"\b\b\b\b...Interrupted in "+display_time(int(elapsed))+bcolors.ENDC+"\n"
                     clear()
                     print "\t"+bcolors.WARNING + "Test Skipped. Performing Next. Press Ctrl+Z to Quit RapidScan." + bcolors.ENDC
-                    rs_skipped_checks = rs_skipped_checks + 1                
-                        
+                    rs_skipped_checks = rs_skipped_checks + 1
+
             tool=tool+1
-        
+
         print bcolors.BG_ENDL_TXT+"[ Preliminary Scan Phase Completed. ]"+bcolors.ENDC
         print "\n"
 
@@ -850,7 +866,7 @@ else:
 	        	except:
 	        		break
 	        report.close()
-        
+
         print "\tTotal Number of Vulnerability Checks        : "+bcolors.BOLD+bcolors.OKGREEN+str(len(tool_names))+bcolors.ENDC
         print "\tTotal Number of Vulnerability Checks Skipped: "+bcolors.BOLD+bcolors.WARNING+str(rs_skipped_checks)+bcolors.ENDC
         print "\tTotal Number of Vulnerabilities Detected    : "+bcolors.BOLD+bcolors.BADFAIL+str(len(rs_vul_list))+bcolors.ENDC
